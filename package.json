@@ -1,0 +1,13 @@
+{
+  "name": "jeu-mot-de-passe",
+  "version": "1.0.0",
+  "description": "Un jeu de devinette de mot de passe en Node.js",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+}
