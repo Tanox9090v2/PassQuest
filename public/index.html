@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PassQuest - Le Jeu du Mot de Passe</title>
+    
+    <!-- Meta SEO -->
+    <meta name="description" content="Créez des défis de mot de passe et tentez de pirater ceux de vos amis dans ce jeu web interactif et ultra stylé !">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Stylesheet -->
+    <link rel="stylesheet" href="style.css">
+    
+    <!-- Canvas Confetti for victory effect -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    
+    <!-- Application Logic -->
+    <script src="app.js" defer></script>
+</head>
+<body>
+    <!-- Animated background particles -->
+    <div class="bg-particles">
+        <div class="bubble bubble-1"></div>
+        <div class="bubble bubble-2"></div>
+        <div class="bubble bubble-3"></div>
+    </div>
+
+    <div class="container">
+        <!-- Header -->
+        <header>
+            <div class="logo">
+                <i class="fa-solid fa-user-shield logo-icon"></i>
+                <h1>Pass<span>Quest</span></h1>
+            </div>
+            <p class="subtitle">Le jeu de piratage social. Crée ton profil, cache ton mot de passe, et devine ceux des autres !</p>
+        </header>
+
+        <!-- Main Card -->
+        <main class="main-card">
+            <!-- Tabs Navigation -->
+            <div class="tabs-nav">
+                <button class="tab-btn active" data-tab="create">
+                    <i class="fa-solid fa-user-plus"></i> Créer un Défi
+                </button>
+                <button class="tab-btn" data-tab="play" id="tab-play-btn">
+                    <i class="fa-solid fa-gamepad"></i> Relever un Défi
+                </button>
+                <div class="tab-slider"></div>
+            </div>
+
+            <!-- Tab Contents -->
+            <div class="tab-content-container">
+                <!-- TAB 1: CREATE PROFILE -->
+                <section class="tab-content active" id="tab-create">
+                    <div class="section-header">
+                        <h2>Crée ton Identité Secrète</h2>
+                        <p>Choisis un pseudo unique et un mot de passe coriace. Les autres joueurs devront tenter de le deviner.</p>
+                    </div>
+
+                    <form id="create-form" autocomplete="off">
+                        <!-- Pseudo Input -->
+                        <div class="input-group">
+                            <label for="create-username">
+                                <i class="fa-solid fa-user"></i> Pseudo
+                            </label>
+                            <input type="text" id="create-username" placeholder="Ex: CyberNinja" required minlength="3">
+                            <small class="input-help">Au moins 3 caractères, unique.</small>
+                        </div>
+
+                        <!-- Password Input -->
+                        <div class="input-group">
+                            <label for="create-password">
+                                <i class="fa-solid fa-lock"></i> Mot de Passe
+                            </label>
+                            <div class="input-wrapper">
+                                <input type="password" id="create-password" placeholder="Ex: DragonGlace99" required>
+                                <button type="button" class="toggle-password" tabindex="-1">
+                                    <i class="fa-regular fa-eye"></i>
+                                </button>
+                            </div>
+                            <small class="input-help">C'est ce que les autres devront deviner.</small>
+                        </div>
+
+                        <!-- Hint Input (Optional) -->
+                        <div class="input-group">
+                            <label for="create-hint">
+                                <i class="fa-solid fa-lightbulb"></i> Indice de sécurité <span class="badge-optional">(Optionnel)</span>
+                            </label>
+                            <input type="text" id="create-hint" placeholder="Ex: Mon animal préféré de 1999">
+                            <small class="input-help">Cet indice sera visible par tout le monde.</small>
+                        </div>
+
+                        <!-- Submit Button -->
+                        <button type="submit" class="btn btn-primary" id="btn-create-submit">
+                            <span class="btn-text">Enregistrer le profil</span>
+                            <i class="fa-solid fa-paper-plane btn-icon"></i>
+                        </button>
+                    </form>
+                </section>
+
+                <!-- TAB 2: PLAY / GUESS -->
+                <section class="tab-content" id="tab-play">
+                    <div class="section-header">
+                        <h2>Pirate un Compte</h2>
+                        <p>Choisis un joueur et utilise les indices disponibles pour décoder son mot de passe.</p>
+                    </div>
+
+                    <!-- Target Selector -->
+                    <div class="input-group">
+                        <label for="target-user-select">
+                            <i class="fa-solid fa-users"></i> Sélectionne une cible
+                        </label>
+                        <div class="target-select-container">
+                            <div class="select-wrapper">
+                                <select id="target-user-select" required>
+                                    <option value="" disabled selected>-- Choisis un joueur à pirater --</option>
+                                </select>
+                                <i class="fa-solid fa-chevron-down select-arrow"></i>
+                            </div>
+                            <div class="target-controls hidden" id="target-controls">
+                                <button type="button" class="ctrl-btn edit-btn" id="ctrl-edit-btn" title="Modifier ce défi">
+                                    <i class="fa-solid fa-pen-to-square"></i>
+                                </button>
+                                <button type="button" class="ctrl-btn delete-btn" id="ctrl-delete-btn" title="Supprimer ce défi">
+                                    <i class="fa-solid fa-trash-can"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Play Workspace (Visible when a user is selected) -->
+                    <div id="play-workspace" class="play-workspace hidden">
+                        <!-- Clues Dashboard -->
+                        <div class="clues-grid">
+                            <!-- Clue 1: Length -->
+                            <div class="clue-card">
+                                <div class="clue-icon"><i class="fa-solid fa-text-width"></i></div>
+                                <div class="clue-info">
+                                    <span class="clue-label">Longueur</span>
+                                    <span class="clue-value" id="clue-length-val">0 caractères</span>
+                                </div>
+                            </div>
+
+                            <!-- Clue 2: First Letter (Interactive Reveal) -->
+                            <div class="clue-card reveal-card" id="letter-reveal-card">
+                                <div class="clue-icon"><i class="fa-solid fa-font"></i></div>
+                                <div class="clue-info">
+                                    <span class="clue-label">Première lettre</span>
+                                    <span class="clue-value italic" id="clue-letter-placeholder">Clique pour révéler</span>
+                                    <span class="clue-value hidden" id="clue-letter-val">?</span>
+                                </div>
+                                <div class="reveal-overlay">
+                                    <i class="fa-solid fa-eye-slash"></i> Révéler
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Hint Box (Text) -->
+                        <div class="hint-box hidden" id="hint-box-container">
+                            <div class="hint-header">
+                                <i class="fa-solid fa-lightbulb text-yellow"></i>
+                                <span>Indice laissé par le joueur :</span>
+                            </div>
+                            <p class="hint-text" id="clue-hint-text">"Aucun indice disponible..."</p>
+                        </div>
+
+                        <!-- Guess Attempt Form -->
+                        <form id="guess-form" autocomplete="off" class="guess-form">
+                            <!-- Password Length Visual Indicator -->
+                            <div class="password-dots-container" id="password-dots-container">
+                                <!-- Dots generated dynamically by JS -->
+                            </div>
+
+                            <div class="input-group">
+                                <label for="guess-input">
+                                    <i class="fa-solid fa-key"></i> Saisis ta tentative
+                                </label>
+                                <div class="input-wrapper">
+                                    <input type="text" id="guess-input" placeholder="Devine le mot de passe..." required>
+                                    <span class="char-counter" id="guess-char-counter">0 / 0</span>
+                                </div>
+                            </div>
+
+                            <button type="submit" class="btn btn-accent" id="btn-guess-submit">
+                                <span class="btn-text">Lancer le piratage</span>
+                                <i class="fa-solid fa-terminal btn-icon"></i>
+                            </button>
+                        </form>
+
+                        <!-- Win/Loss Messages container (dynamic) -->
+                        <div class="result-message-container hidden" id="result-message">
+                            <!-- Content injected via JS -->
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer>
+            <p>Créé avec <i class="fa-solid fa-heart text-pink"></i> pour le fun • CryptaJeu &copy; 2026</p>
+        </footer>
+    </div>
+
+    <!-- Modal Edit Challenge -->
+    <div class="modal-overlay hidden" id="edit-modal">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-pen-to-square"></i> Modifier le Défi</h3>
+                <button type="button" class="modal-close" id="edit-modal-close"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form id="edit-form" autocomplete="off">
+                <input type="hidden" id="edit-old-username">
+                
+                <!-- Pseudo Input -->
+                <div class="input-group">
+                    <label for="edit-username"><i class="fa-solid fa-user"></i> Nouveau Pseudo</label>
+                    <input type="text" id="edit-username" required minlength="3">
+                </div>
+
+                <!-- Password Input -->
+                <div class="input-group">
+                    <label for="edit-password"><i class="fa-solid fa-lock"></i> Nouveau Mot de Passe</label>
+                    <div class="input-wrapper">
+                        <input type="password" id="edit-password" required>
+                        <button type="button" class="toggle-password" tabindex="-1">
+                            <i class="fa-regular fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Hint Input -->
+                <div class="input-group">
+                    <label for="edit-hint"><i class="fa-solid fa-lightbulb"></i> Nouvel Indice <span class="badge-optional">(Optionnel)</span></label>
+                    <input type="text" id="edit-hint">
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" id="edit-cancel-btn">Annuler</button>
+                    <button type="submit" class="btn btn-accent">Enregistrer</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Confirm Delete -->
+    <div class="modal-overlay hidden" id="delete-modal">
+        <div class="modal-card modal-confirm">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-triangle-exclamation text-rose"></i> Supprimer le Défi</h3>
+                <button type="button" class="modal-close" id="delete-modal-close"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-body">
+                <p>Es-tu sûr de vouloir supprimer le défi de <strong id="delete-target-name" class="text-neon-cyan">Dylan</strong> ? Cette action est irréversible et supprimera le joueur de la liste.</p>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-secondary" id="delete-cancel-btn">Annuler</button>
+                <button type="button" class="btn btn-danger" id="delete-confirm-btn">Oui, supprimer</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hacker Terminal Overlay -->
+    <div class="terminal-overlay hidden" id="terminal-overlay">
+        <div class="terminal-window">
+            <div class="terminal-header">
+                <div class="terminal-dots">
+                    <span class="term-dot close-dot"></span>
+                    <span class="term-dot minimize-dot"></span>
+                    <span class="term-dot maximize-dot"></span>
+                </div>
+                <div class="terminal-title">cmd.exe - PassQuest Decryptor v1.4</div>
+            </div>
+            <div class="terminal-body" id="terminal-body">
+                <!-- Lines printed dynamically by JS -->
+            </div>
+        </div>
+    </div>
+</body>
+</html>
